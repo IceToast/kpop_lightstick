@@ -24,6 +24,11 @@ will feature a button to switch between modes.
 #define LEDPIN 1
 #define PIXELS 16
 
+/* POTI States on mode switch */
+int poti1ModeChange = 0;
+int poti2ModeChange = 0;
+int poti3ModeChange = 0;
+
 /* Initiate variables and set defaults */
 int red = 128;
 int green = 128;
@@ -65,6 +70,13 @@ void loop()
   switch (mode)
   {
   case 0: // Color modification mode
+    if (!((analogRead(POTI1) != poti1ModeChange) ||
+          (analogRead(POTI2) != poti2ModeChange) ||
+          (analogRead(POTI3) != poti3ModeChange)))
+    {
+      return;
+    }
+
     red = map(analogRead(POTI1), 0, 1024, 0, 254);
     green = map(analogRead(POTI3), 0, 1024, 0, 254);
     blue = map(analogRead(POTI2), 0, 1024, 0, 254);
@@ -76,7 +88,11 @@ void loop()
   case 1: // moving ring mode
           // the leds are arranged in a ring, so we can use the i counter to
           // make the ring spin by lighting up the next led in the ring and turning off the last one
-    cycle = map(analogRead(POTI3), 0, 512, 50, 1000);
+
+    if (analogRead(POTI3) != poti3ModeChange)
+    {
+      cycle = map(analogRead(POTI3), 0, 512, 50, 1000);
+    }
 
     for (i = 0; i < PIXELS; i++)
     {
@@ -91,8 +107,11 @@ void loop()
     break;
 
   case 2: // Strobe mode
-    bright = map(analogRead(POTI1), 0, 1024, 5, 254);
-    cycle = map(analogRead(POTI3), 0, 512, 20, 1000);
+    if (analogRead(POTI3) != poti3ModeChange || analogRead(POTI1) != poti1ModeChange)
+    {
+      bright = map(analogRead(POTI1), 0, 1024, 5, 254);
+      cycle = map(analogRead(POTI3), 0, 512, 20, 1000);
+    }
 
     if (cycle > 5)
     { // solid if "faster" than 5 ms
@@ -133,17 +152,27 @@ void setMode()
 {
   if (mode == 2 && millis() > modeCanChange)
   { // moving ring mode
+    setPotiState();
     mode = 0;
     modeCanChange = millis() + modeCycle;
   }
   else if (mode == 1 && millis() > modeCanChange)
   { // Strobe mode
+    setPotiState();
     mode = 2;
     modeCanChange = millis() + modeCycle;
   }
   else if (mode == 0 && millis() > modeCanChange)
   { // Color changer
+    setPotiState();
     mode = 1;
     modeCanChange = millis() + modeCycle;
   }
+}
+
+void setPotiState()
+{
+  poti1ModeChange = analogRead(POTI1);
+  poti2ModeChange = analogRead(POTI2);
+  poti3ModeChange = analogRead(POTI3);
 }
