@@ -121,7 +121,7 @@ void loop()
     if (analogRead(POTI3) != poti3ModeChange || analogRead(POTI1) != poti1ModeChange)
     {
       bright = map(analogRead(POTI1), 0, 1024, 5, 254);
-      cycle = map(analogRead(POTI3), 0, 512, 20, 1000);
+      cycle = map(analogRead(POTI3), 0, 1024, 20, 300);
     }
 
     if (cycle > 5)
