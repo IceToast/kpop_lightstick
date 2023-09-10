@@ -18,16 +18,16 @@ will feature a button to switch between modes.
 #endif
 
 #define POTI1 1 // silkscreen 2
-#define POTI3 3 // silkscreen 3
 #define POTI2 2 // silkscreen 4
+#define POTI3 3 // silkscreen 3
 #define STATEPIN 0
 #define LEDPIN 1
 #define PIXELS 16
 
 /* POTI States on mode switch */
-int poti1ModeChange = 0;
-int poti2ModeChange = 0;
-int poti3ModeChange = 0;
+int poti1ModeChange = 128;
+int poti2ModeChange = 128;
+int poti3ModeChange = 128;
 
 /* Initiate variables and set defaults */
 int red = 128;
@@ -39,6 +39,9 @@ int blinkstate = 1;
 int mode = 0;
 int modeCycle = 500;
 uint32_t modeCanChange;
+int spinCurrentHead = PIXELS;
+int spinCurrentTail = PIXELS / 3;
+int spinCanChange = 1;
 
 int i = 0;           // predeclare a counter integer
 uint32_t stateStart; // for managing the blink
@@ -69,12 +72,13 @@ void loop()
 
   switch (mode)
   {
-  case 0: // Color modification mode
-    if (!((analogRead(POTI1) != poti1ModeChange) ||
-          (analogRead(POTI2) != poti2ModeChange) ||
-          (analogRead(POTI3) != poti3ModeChange)))
+  case 0:
+  { // Color modification mode
+    if ((analogRead(POTI1) == poti1ModeChange) &&
+        (analogRead(POTI2) == poti2ModeChange) &&
+        (analogRead(POTI3) == poti3ModeChange))
     {
-      return;
+      break;
     }
 
     red = map(analogRead(POTI1), 0, 1024, 0, 254);
@@ -85,28 +89,35 @@ void loop()
     pixels.setBrightness(bright);
     pixels.show();
     break;
-  case 1: // moving ring mode
-          // the leds are arranged in a ring, so we can use the i counter to
-          // make the ring spin by lighting up the next led in the ring and turning off the last one
+  }
+  case 1:
+  { // moving ring mode
+    // the leds are arranged in a ring, so we can use the i counter to
+    // make the ring spin by lighting up the next led in the ring and turning off the last one
 
-    if (analogRead(POTI3) != poti3ModeChange)
+    if (analogRead(POTI3) != poti3ModeChange || analogRead(POTI1) != poti1ModeChange)
     {
-      cycle = map(analogRead(POTI3), 0, 512, 50, 1000);
+      bright = map(analogRead(POTI1), 0, 1024, 5, 254);
+      cycle = map(analogRead(POTI3), 0, 1024, 100, 500);
     }
 
-    for (i = 0; i < PIXELS; i++)
-    {
-      // new pixel
-      pixels.setPixelColor(i, pixels.Color(red, green, blue));
-      pixels.setPixelColor(i - (PIXELS / 2), pixels.Color(0, 0, 0));
+    pixels.setBrightness(bright);
 
+    if (stateStart < (millis() - cycle / 10))
+    {
+      spinCurrentHead = (spinCurrentHead + 1) % PIXELS;
+      spinCurrentTail = (spinCurrentTail + 1) % PIXELS;
+      pixels.setPixelColor(spinCurrentHead, pixels.Color(red, green, blue));
+      pixels.setPixelColor(spinCurrentTail, pixels.Color(0, 0, 0));
       pixels.show();
-      delay(cycle);
+
+      stateStart = millis();
     }
 
     break;
-
-  case 2: // Strobe mode
+  }
+  case 2:
+  { // Strobe mode
     if (analogRead(POTI3) != poti3ModeChange || analogRead(POTI1) != poti1ModeChange)
     {
       bright = map(analogRead(POTI1), 0, 1024, 5, 254);
@@ -145,6 +156,7 @@ void loop()
       pixels.show();
     }
     break;
+  }
   }
 }
 
