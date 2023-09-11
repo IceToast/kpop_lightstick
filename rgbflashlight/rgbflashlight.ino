@@ -74,16 +74,21 @@ void loop()
   {
   case 0:
   { // Color modification mode
-    if ((analogRead(POTI1) == poti1ModeChange) &&
-        (analogRead(POTI2) == poti2ModeChange) &&
-        (analogRead(POTI3) == poti3ModeChange))
+
+    // Only change the value of the poti that has changed
+    if (!(analogRead(POTI1) == poti1ModeChange))
     {
-      break;
+      red = map(analogRead(POTI1), 0, 1024, 0, 254);
+    }
+    if (!(analogRead(POTI2) == poti2ModeChange))
+    {
+      blue = map(analogRead(POTI2), 0, 1024, 0, 254);
+    }
+    if (!(analogRead(POTI3) == poti3ModeChange))
+    {
+      green = map(analogRead(POTI3), 0, 1024, 0, 254);
     }
 
-    red = map(analogRead(POTI1), 0, 1024, 0, 254);
-    green = map(analogRead(POTI3), 0, 1024, 0, 254);
-    blue = map(analogRead(POTI2), 0, 1024, 0, 254);
     for (i = 0; i < PIXELS; i++)
       pixels.setPixelColor(i, pixels.Color(red, green, blue));
     pixels.setBrightness(bright);
@@ -95,10 +100,14 @@ void loop()
     // the leds are arranged in a ring, so we can use the i counter to
     // make the ring spin by lighting up the next led in the ring and turning off the last one
 
-    if (analogRead(POTI3) != poti3ModeChange || analogRead(POTI1) != poti1ModeChange)
+    // Only change the value of the poti that has changed
+    if (analogRead(POTI3) != poti3ModeChange)
+    {
+      cycle = map(analogRead(POTI3), 0, 1024, 100, 500);
+    }
+    if (analogRead(POTI1) != poti1ModeChange)
     {
       bright = map(analogRead(POTI1), 0, 1024, 5, 254);
-      cycle = map(analogRead(POTI3), 0, 1024, 100, 500);
     }
 
     pixels.setBrightness(bright);
@@ -118,10 +127,15 @@ void loop()
   }
   case 2:
   { // Strobe mode
-    if (analogRead(POTI3) != poti3ModeChange || analogRead(POTI1) != poti1ModeChange)
+
+    // Only change the value of the poti that has changed
+    if (analogRead(POTI3) != poti3ModeChange)
+    {
+      cycle = map(analogRead(POTI3), 0, 1024, 20, 300);
+    }
+    if (analogRead(POTI1) != poti1ModeChange)
     {
       bright = map(analogRead(POTI1), 0, 1024, 5, 254);
-      cycle = map(analogRead(POTI3), 0, 1024, 20, 300);
     }
 
     if (cycle > 5)
